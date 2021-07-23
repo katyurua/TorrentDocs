@@ -122,7 +122,7 @@ method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
 ## 监控路径 (可以添加更多, 但需使用唯一 schedule names)
 ## Add torrent
 ## 添加种子
-##schedule2 = watch_load, 11, 10, ((load.verbose, (cat, (cfg.watch), "load/*.torrent")))
+## schedule2 = watch_load, 11, 10, ((load.verbose, (cat, (cfg.watch), "load/*.torrent")))
 ## 添加种子并且开始下载
 schedule2 = watch_start, 10, 10, ((load.start_verbose, (cat, (cfg.watch), "start/*.torrent")))
 
