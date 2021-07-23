@@ -44,10 +44,10 @@ network.port_random.set = no
 ## 无 tracker 种子和 UDP tracker 支持
 ## (conservative settings for 'private' trackers, change for 'public')
 ## (conservative settings for 'private' trackers, change for 'public')
-dht.mode.set = disable
-protocol.pex.set = no
+dht.mode.set = auto
+protocol.pex.set = yes
 
-trackers.use_udp.set = no
+trackers.use_udp.set = yes
 
 
 ## Peer settings
