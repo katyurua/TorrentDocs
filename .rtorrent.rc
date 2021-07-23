@@ -36,7 +36,7 @@ execute.throw = sh, -c, (cat,\
 
 ## Listening port for incoming peer traffic (fixed; you can also randomize it)
 ## 传入连接监听端口 (固定; 或者随机)
-network.port_range.set = 50000-50000
+network.port_range.set = 51325-51325
 network.port_random.set = no
 
 
@@ -61,7 +61,23 @@ throttle.min_peers.seed.set = 30
 throttle.max_peers.seed.set = 80
 trackers.numwant.set = 80
 
-protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
+protocol.encryption.set = require
+## protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
+## none – The default, don’t attempt any encryption.
+## 
+## allow_incoming – Allow incoming encrypted connections from other peers.
+## 
+## try_outgoing – Attempt to set up encryption when initiating a connection.
+## 
+## require – Require encryption, and reject peers who don’t support it.
+## 
+## require_RC4 – Require RC4 encryption specifically.
+## 
+## require_rc4 – Same as above.
+## 
+## enable_retry – If a peer is rejected for not supporting the encryption we need, retry the handshake.
+## 
+## prefer_plaintext – Prefer plaintext encryption.
 
 
 ## Limits for file handle resources, this is optimized for
@@ -122,7 +138,7 @@ method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
 ## 监控路径 (可以添加更多, 但需使用唯一 schedule names)
 ## Add torrent
 ## 添加种子
-## schedule2 = watch_load, 11, 10, ((load.verbose, (cat, (cfg.watch), "load/*.torrent")))
+schedule2 = watch_load, 11, 10, ((load.verbose, (cat, (cfg.watch), "load/*.torrent")))
 ## 添加种子并且开始下载
 schedule2 = watch_start, 10, 10, ((load.start_verbose, (cat, (cfg.watch), "start/*.torrent")))
 
