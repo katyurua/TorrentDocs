@@ -1,0 +1,148 @@
+#############################################################################
+# A minimal rTorrent configuration that provides the basic features
+# you want to have in addition to the built-in defaults.
+#
+# See https://github.com/rakshasa/rtorrent/wiki/CONFIG-Template
+# for an up-to-date version.
+#############################################################################
+#############################################################################
+# 一个 rTorrent 的最小配置文件
+# 除了内置的默认设置之外，它还提供您想要的基本功能。
+#
+# 访问 https://github.com/rakshasa/rtorrent/wiki/CONFIG-Template
+# 以获取最新版本
+#############################################################################
+
+
+## Instance layout (base paths) 
+## 实例布局 （基本路径）
+method.insert = cfg.basedir,  private|const|string, (cat,"/home/USERNAME/rtorrent/")
+method.insert = cfg.download, private|const|string, (cat,(cfg.basedir),"download/")
+method.insert = cfg.logs,     private|const|string, (cat,(cfg.basedir),"log/")
+method.insert = cfg.logfile,  private|const|string, (cat,(cfg.logs),"rtorrent-",(system.time),".log")
+method.insert = cfg.session,  private|const|string, (cat,(cfg.basedir),".session/")
+method.insert = cfg.watch,    private|const|string, (cat,(cfg.basedir),"watch/")
+
+
+## Create instance directories 
+## 创建实例目录
+execute.throw = sh, -c, (cat,\
+    "mkdir -p \"",(cfg.download),"\" ",\
+    "\"",(cfg.logs),"\" ",\
+    "\"",(cfg.session),"\" ",\
+    "\"",(cfg.watch),"/load\" ",\
+    "\"",(cfg.watch),"/start\" ")
+
+
+## Listening port for incoming peer traffic (fixed; you can also randomize it)
+## 传入连接监听端口 (固定; 或者随机)
+network.port_range.set = 50000-50000
+network.port_random.set = no
+
+
+## Tracker-less torrent and UDP tracker support
+## 无 tracker 种子和 UDP tracker 支持
+## (conservative settings for 'private' trackers, change for 'public')
+## (conservative settings for 'private' trackers, change for 'public')
+dht.mode.set = disable
+protocol.pex.set = no
+
+trackers.use_udp.set = no
+
+
+## Peer settings
+## Peer 设置
+throttle.max_uploads.set = 100
+throttle.max_uploads.global.set = 250
+
+throttle.min_peers.normal.set = 20
+throttle.max_peers.normal.set = 60
+throttle.min_peers.seed.set = 30
+throttle.max_peers.seed.set = 80
+trackers.numwant.set = 80
+
+protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
+
+
+## Limits for file handle resources, this is optimized for
+## 文件句柄资源限制
+## an `ulimit` of 1024 (a common default). You MUST leave
+## 可设置为 `ulimit` 或 1024 (常见默认值). 
+## 你必须保留一定量的句柄以供 rTorrent 内部需求
+## a ceiling of handles reserved for rTorrent's internal needs!
+network.http.max_open.set = 50
+network.max_open_files.set = 600
+network.max_open_sockets.set = 300
+
+
+## Memory resource usage (increase if you have a large number of items loaded,
+## 内存资源范围
+## and/or the available resources to spend)
+## 可提高此选项的值 当你需要加载大量种子 或者你内存多
+pieces.memory.max.set = 1800M
+network.xmlrpc.size_limit.set = 4M
+
+
+## Basic operational settings (no need to change these)
+## 基本操作设置 (无需更改)
+session.path.set = (cat, (cfg.session))
+directory.default.set = (cat, (cfg.download))
+log.execute = (cat, (cfg.logs), "execute.log")
+#log.xmlrpc = (cat, (cfg.logs), "xmlrpc.log")
+execute.nothrow = sh, -c, (cat, "echo >",\
+    (session.path), "rtorrent.pid", " ",(system.pid))
+
+
+## Other operational settings (check & adapt)
+## 其他操作设置 (可根据使用情况修改)
+encoding.add = utf8
+system.umask.set = 0027
+system.cwd.set = (directory.default)
+network.http.dns_cache_timeout.set = 25
+schedule2 = monitor_diskspace, 15, 60, ((close_low_diskspace, 1000M))
+#pieces.hash.on_completion.set = no
+#view.sort_current = seeding, greater=d.ratio=
+#keys.layout.set = qwerty
+#network.http.capath.set = "/etc/ssl/certs"
+#network.http.ssl_verify_peer.set = 0
+#network.http.ssl_verify_host.set = 0
+
+
+## Some additional values and commands
+## 一些其他附加值和命令
+method.insert = system.startup_time, value|const, (system.time)
+method.insert = d.data_path, simple,\
+    "if=(d.is_multi_file),\
+        (cat, (d.directory), /),\
+        (cat, (d.directory), /, (d.name))"
+method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
+
+
+## Watch directories (add more as you like, but use unique schedule names)
+## 监控路径 (可以添加更多, 但需使用唯一 schedule names)
+## Add torrent
+## 添加种子
+schedule1 = watch_load, 11, 10, ((load.verbose, (cat, (cfg.watch), "load/*.torrent")))
+## 添加种子并且开始下载
+schedule2 = watch_start, 10, 10, ((load.start_verbose, (cat, (cfg.watch), "start/*.torrent")))
+
+
+## Run the rTorrent process as a daemon in the background
+## 以 daemon 形式在后台运行 rTorrent
+## (and control via XMLRPC sockets)
+## (并通过 XMLRPC 接口控制)
+#system.daemon.set = true
+#network.scgi.open_local = (cat,(session.path),rpc.socket)
+#execute.nothrow = chmod,770,(cat,(session.path),rpc.socket)
+
+
+## Logging:
+## 日志:
+##   Levels = critical error warn notice info debug
+##   Groups = connection_* dht_* peer_* rpc_* storage_* thread_* tracker_* torrent_*
+print = (cat, "Logging to ", (cfg.logfile))
+log.open_file = "log", (cfg.logfile)
+log.add_output = "info", "log"
+#log.add_output = "tracker_debug", "log"
+
+### END of rtorrent.rc ###
